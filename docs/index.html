@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#0b654b" />
+  <title>Election Day Hub — Public Demo</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="demo-banner" role="note"><strong>Public demo · fictional records only.</strong> Imports stay in this browser and are not shared with your team. Do not upload real voter data here.</div>
+  <div id="app" aria-live="polite"></div>
+  <div id="toast" class="toast" role="status"></div>
+  <input id="csv-file" type="file" accept=".csv,text/csv" hidden />
+  <script src="demo-backend.js"></script>
+  <script type="module" src="app.js"></script>
+</body>
+</html>
