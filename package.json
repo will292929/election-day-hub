@@ -1,0 +1,13 @@
+{
+  "name": "election-day-hub",
+  "version": "2.0.0-local",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server.mjs",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

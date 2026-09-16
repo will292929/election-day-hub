@@ -1,0 +1,4 @@
+first_name,last_name,town,phone,family_id,address,ward,polling_place,age,consent
+Jordan,Blake,Camden,207-555-0111,HH-2001,9 Bay View Drive,Ward 2,Harbor School,51,true
+Riley,Blake,Camden,207-555-0112,HH-2001,9 Bay View Drive,Ward 2,Harbor School,47,true
+Taylor,Morgan,Rockport,207-555-0113,HH-2002,22 Main Street,Ward 1,Town Office,36,false
