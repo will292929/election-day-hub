@@ -51,7 +51,7 @@ function frame(content) {
       <aside class="sidebar">
         <nav class="nav" aria-label="Main navigation">${nav()}</nav>
         <div class="assignment"><span class="eyebrow">Today's assignment</span><strong>${esc(a.site)}</strong><p>${esc(a.town)} · ${esc(a.ward)}</p><div class="shift"><p>Shift</p><strong>${esc(a.shift)}</strong></div></div>
-        <div class="private"><strong>▣ &nbsp; Private workspace</strong>Access is limited by campaign and role.</div>
+        <div class="private"><strong>▣ &nbsp; Public demo</strong>No real access control. Use fictional records only.</div>
       </aside>
       <main class="main"><div class="page">${content}</div></main>
     </div>
@@ -75,8 +75,8 @@ function pollView() {
   const admin = rolePreview !== "Volunteer";
   return frame(`
     <section class="hero">
-      <div class="hero-intro"><span class="eyebrow" style="color:#bfe7d7">Live poll watch</span><h2>Voter check-in</h2><p>Find a voter, confirm the record, and log their check-in.</p></div>
-      ${admin ? `<div class="metric"><span>Checked in today</span><strong>${428 + checked}</strong></div><div class="metric"><span>Assigned voters</span><strong>${(1200 + voters.length).toLocaleString()}</strong></div><div class="metric"><span>Turnout logged</span><strong>${turnout}%</strong></div><div class="metric"><span>Last sync</span><strong>Live</strong></div>` : `<div class="metric"><span>Your assignment</span><strong>${esc(campaign().assignment.town)}</strong></div><div class="metric"><span>Shift</span><strong style="font-size:16px">${esc(campaign().assignment.shift)}</strong></div>`}
+      <div class="hero-intro"><span class="eyebrow" style="color:#bfe7d7">Demo poll watch</span><h2>Voter check-in</h2><p>Find a fictional voter and try the check-in flow.</p></div>
+      ${admin ? `<div class="metric"><span>Demo check-ins</span><strong>${checked}</strong></div><div class="metric"><span>Demo voters</span><strong>${voters.length}</strong></div><div class="metric"><span>Demo turnout</span><strong>${turnout}%</strong></div><div class="metric"><span>Storage</span><strong style="font-size:15px">This browser</strong></div>` : `<div class="metric"><span>Demo assignment</span><strong>${esc(campaign().assignment.town)}</strong></div><div class="metric"><span>Shift</span><strong style="font-size:16px">${esc(campaign().assignment.shift)}</strong></div>`}
     </section>
     <div class="page-title">
       <div><span class="eyebrow">${admin ? "Campaign operations" : "Volunteer workspace"}</span><h2>Poll watch</h2><p>${admin ? "Search records, record check-ins, and manage election logistics." : "Select a town and search voter names."}</p></div>
@@ -88,7 +88,7 @@ function pollView() {
     </section>
     <section class="workspace">
       <article class="card voter-list">
-        <div class="card-header"><div><h3>Search results</h3><p>${results.length} matching record${results.length === 1 ? "" : "s"}</p></div><span class="live">● Live</span></div>
+        <div class="card-header"><div><h3>Search results</h3><p>${results.length} matching record${results.length === 1 ? "" : "s"}</p></div><span class="live">● Demo</span></div>
         ${results.length ? results.map(v => `<button class="voter-row ${v.id === selectedVoterId ? "active" : ""}" data-voter="${v.id}"><span class="initials">${initials(v)}</span><span><strong>${esc(v.firstName)} ${esc(v.lastName)}</strong><small>${admin ? `${esc(v.address)} · Age ${v.age}` : `${esc(v.ward)} · ${esc(v.pollingPlace)}`}</small><small>${esc(v.ward)} · ${esc(v.pollingPlace)}</small></span><span class="status ${v.votedAt ? "yes" : ""}">${v.votedAt ? "✓ Voted" : "Not marked"}</span></button>`).join("") : `<div class="empty">No matching voters. Try another town or name.</div>`}
       </article>
       ${selected ? voterDetail(selected, admin) : `<article class="card"><div class="empty">Select a voter to continue.</div></article>`}
@@ -101,7 +101,7 @@ function voterDetail(v, admin) {
     <div class="detail-grid"><div><span>Polling place</span><strong>${esc(v.pollingPlace)}</strong></div><div><span>Precinct</span><strong>${esc(v.ward)}</strong></div>${admin ? `<div class="wide"><span>Family ID</span><strong>${esc(v.familyId)}</strong></div>` : ""}</div>
     <button class="checkin ${v.votedAt ? "done" : ""}" data-checkin="${v.id}" ${v.votedAt ? "disabled" : ""}>${v.votedAt ? "✓ Vote already logged" : "✓ Mark as voted"}</button>
     <div class="message-block">
-      <div class="message-head"><div><strong>▤ &nbsp; Consent-based messaging</strong><small>Neutral election logistics only</small></div><span class="consent">${v.consent ? "CONSENT ON FILE" : "NO CONSENT"}</span></div>
+      <div class="message-head"><div><strong>▤ &nbsp; Messaging simulation</strong><small>No texts are sent</small></div><span class="consent">${v.consent ? "DEMO CONSENT" : "NO CONSENT"}</span></div>
       <button class="btn" style="width:100%" data-message="plan" data-voter-id="${v.id}" ${!v.consent ? "disabled" : ""}>▤ Apply campaign texting plan</button>
       ${admin ? `<div class="field" style="margin-top:14px"><label>Send delay</label><select id="delay"><option value="0">Immediately</option><option value="5" selected>5 minutes</option><option value="15">15 minutes</option><option value="30">30 minutes</option></select></div>
       <div class="contact"><div><strong>${esc(v.firstName)} ${esc(v.lastName)}</strong><small>${esc(v.phone)}</small></div><button class="btn" data-message="voter" data-voter-id="${v.id}" ${!v.consent ? "disabled" : ""}>⌁ Queue text</button></div>
@@ -113,7 +113,7 @@ function voterDetail(v, admin) {
 function teamView() {
   return frame(`<div class="page-title"><div><span class="eyebrow">Campaign access</span><h2>Team</h2><p>Invite people and manage how they enter ${esc(campaign().name)}.</p></div></div>
     <section class="card section-card"><div class="team-list">${state.team.map(m => `<div class="team-row"><span class="initials">${esc(m.initials)}</span><div><h4>${esc(m.label)}</h4><p>${esc(m.scope)}</p></div><span class="role">${esc(m.role)}</span></div>`).join("")}</div></section>
-    <section class="card section-card"><h3>Create a quicklink</h3><p style="color:var(--muted);font-size:13px">Each link works once. Choose when it expires, or leave it valid until someone accepts it.</p>
+    <section class="card section-card"><h3>Create a demo quicklink</h3><p style="color:var(--muted);font-size:13px">Try the link form. Generated links do not create accounts or grant access in this public demo.</p>
       <form id="invite-form" class="form-grid" style="margin-top:18px"><div class="field"><label>Mobile number</label><input name="phone" required placeholder="207-555-0123" /></div><div class="field"><label>Email (optional)</label><input name="email" type="email" placeholder="volunteer@example.com" /></div><div class="field"><label>Access level</label><select name="role"><option>Volunteer</option><option>Staff</option><option>Admin</option></select></div><div class="field"><label>Expires</label><select name="expires"><option value="1">1 hour</option><option value="8">8 hours</option><option value="24">24 hours</option><option value="48" selected>48 hours</option><option value="168">7 days</option><option value="never">Never, until used</option></select></div><div class="span-2"><button class="btn primary" type="submit">Generate quicklink</button></div></form><div id="invite-result"></div>
     </section>`);
 }
@@ -121,7 +121,7 @@ function teamView() {
 function campaignsView() {
   const s = campaign().settings;
   return frame(`<div class="page-title"><div><span class="eyebrow">Admin settings</span><h2>Campaign texting</h2><p>These rules control what the volunteer Text button schedules.</p></div></div>
-    <form id="settings-form" class="card section-card"><div class="notice"><strong>RumbleUp credentials needed.</strong> Messages remain in the local simulated queue until a verified server-side provider is configured.</div>
+    <form id="settings-form" class="card section-card"><div class="notice"><strong>Simulation only.</strong> This public site never connects to RumbleUp or sends messages. Settings are stored only in your browser.</div>
       <div class="form-grid" style="margin-top:20px"><div class="field span-2"><label>RumbleUp Action ID</label><input name="actionId" value="${esc(s.actionId)}" placeholder="Fast Mode Action ID" /></div><div class="field"><label>Recipients</label><select name="recipients"><option value="family-only" ${s.recipients === "family-only" ? "selected" : ""}>Family members only</option><option value="family-and-voter" ${s.recipients === "family-and-voter" ? "selected" : ""}>Family members and voter</option></select></div><div></div><div class="field"><label>Family delay (minutes)</label><input name="familyDelay" type="number" min="0" value="${s.familyDelay}" /></div><div class="field"><label>Voter delay (minutes)</label><input name="voterDelay" type="number" min="0" value="${s.voterDelay}" /></div><div class="field"><label>Family message</label><textarea name="familyMessage">${esc(s.familyMessage)}</textarea></div><div class="field"><label>Separate voter message</label><textarea name="voterMessage">${esc(s.voterMessage)}</textarea></div><div class="span-2"><button class="btn primary" type="submit">Save settings</button></div></div>
       <p style="color:var(--muted);font-size:12px;margin-top:18px">Volunteers never see phone numbers, household records, message text, or delays. The server applies these settings after they press Text.</p>
     </form>`);
