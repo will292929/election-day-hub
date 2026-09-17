@@ -1,9 +1,24 @@
-export function filterVoters(voters, query) {
-  const needle = String(query ?? '').trim().toLocaleLowerCase();
-  if (!needle) return voters;
-  return voters.filter(voter =>
-    `${voter.first_name} ${voter.last_name} ${voter.external_id}`
-      .toLocaleLowerCase().includes(needle));
+export function filterVoters(voters, query, town = 'all') {
+  const tokens = String(query ?? '').trim().toLocaleLowerCase().split(/\s+/).filter(Boolean);
+  return voters.filter(voter => {
+    if (town !== 'all' && voter.town !== town) return false;
+    if (!tokens.length) return true;
+    const first = String(voter.first_name ?? '').toLocaleLowerCase();
+    const last = String(voter.last_name ?? '').toLocaleLowerCase();
+    const id = String(voter.external_id ?? '').toLocaleLowerCase();
+    if (tokens.length === 1) return first.includes(tokens[0]) || last.includes(tokens[0]) || id.includes(tokens[0]);
+    return (first.startsWith(tokens[0]) && last.startsWith(tokens[1])) ||
+      (last.startsWith(tokens[0]) && first.startsWith(tokens[1]));
+  });
+}
+
+export function importPreview(rows, voters) {
+  const existing = new Set(voters.map(voter => voter.external_id));
+  return {
+    added: rows.filter(row => !existing.has(row.externalId)).length,
+    matching: rows.filter(row => existing.has(row.externalId)).length,
+    sample: rows.slice(0, 10),
+  };
 }
 
 export function applyMark(voters, id, timestamp) {

@@ -1,4 +1,4 @@
-import { applyMark, csvCell, filterVoters, normalizeVoterCsv } from './pilot-core.js?v=20260917';
+import { applyMark, csvCell, filterVoters, importPreview, normalizeVoterCsv } from './pilot-core.js?v=20260917b';
 
 const app = document.querySelector('#app');
 const config = window.ELECTION_HUB_SUPABASE || {};
@@ -8,6 +8,7 @@ const voterFields = 'id,external_id,first_name,last_name,town,ward,polling_place
 let client = null, session = null, memberships = [], campaigns = [], campaignId = null;
 let voters = [], volunteers = [], importRows = [], pendingId = null;
 let loadVersion = 0, refreshing = false, marking = false;
+let importCampaignId = null;
 
 function check(result) { if (result.error) throw result.error; return result.data; }
 function role(id = campaignId) { return memberships.find(item => item.campaign_id === id)?.role || ''; }
@@ -36,6 +37,27 @@ function addCampaignTool() {
   if (role() !== 'admin') return;
   document.querySelector('.admin-card')?.insertAdjacentHTML('afterend', `<section class="card admin-card"><p class="eyebrow">ADMIN TOOLS</p><h2>Create a training campaign</h2><p>Give a new fictional campaign a name. You will become its admin, and can then reassign volunteers you manage between campaigns.</p><form id="create-campaign" class="invite-form"><label>Campaign name<input name="name" maxlength="120" required placeholder="Fictional Training Campaign B"></label><button>Create campaign</button></form></section>`);
 }
+function addLookupAndImportTools() {
+  document.querySelector('#search')?.closest('label')?.insertAdjacentHTML('afterend',
+    '<label>Town<select id="town"><option value="all">All towns</option></select></label>');
+  const preview = document.querySelector('#preview');
+  if (preview) preview.outerHTML = '<div id="preview" class="scroll" aria-live="polite"></div>';
+}
+function updateTownOptions() {
+  const select = document.querySelector('#town');
+  if (!select) return;
+  const selected = select.value;
+  const towns = [...new Set(voters.map(item => item.town))].sort((a, b) => a.localeCompare(b));
+  select.innerHTML = '<option value="all">All towns</option>' +
+    towns.map(town => `<option value="${esc(town)}">${esc(town)}</option>`).join('');
+  select.value = towns.includes(selected) ? selected : 'all';
+}
+function renderImportPreview() {
+  const target = document.querySelector('#preview');
+  if (!target || !importRows.length) return;
+  const preview = importPreview(importRows, voters);
+  target.innerHTML = `<p><strong>${importRows.length} rows reviewed:</strong> ${preview.added} new, ${preview.matching} matching demo IDs. Matching rows ${document.querySelector('#replace')?.checked ? 'will update' : 'will be skipped'}.</p><table><thead><tr><th>Demo ID</th><th>Name</th><th>Town</th><th>Result</th></tr></thead><tbody>${preview.sample.map(row => `<tr><td>${esc(row.externalId)}</td><td>${esc(row.firstName)} ${esc(row.lastName)}</td><td>${esc(row.town)}</td><td>${voters.some(voter => voter.external_id === row.externalId) ? 'Existing' : 'New'}</td></tr>`).join('')}</tbody></table><small>Showing first ${preview.sample.length} rows. Import is limited to fictional training data.</small>`;
+}
 async function loadCampaigns() {
   memberships = check(await client.from('memberships').select('campaign_id,role,active')
     .eq('user_id', session.user.id).eq('active', true));
@@ -48,6 +70,7 @@ async function dashboard() {
   if (!campaignId) { noAccess(); return; }
   app.innerHTML = dashboardHtml();
   addCampaignTool();
+  addLookupAndImportTools();
   await loadVoters();
   if (role() === 'admin') await loadAdminPanels();
 }
@@ -63,7 +86,9 @@ async function loadVoters() {
   }
   if (version !== loadVersion || selectedCampaign !== campaignId) return;
   voters = all;
+  updateTownOptions();
   updateVoterDisplay();
+  renderImportPreview();
   const synced = document.querySelector('#last-sync');
   if (synced) synced.textContent = `${all.length === 5000 ? 'Showing first 5,000 records · ' : ''}Updated ${new Date().toLocaleTimeString()}`;
 }
@@ -78,7 +103,7 @@ function updateVoterDisplay() {
 function renderVoters() {
   const target = document.querySelector('#results');
   if (!target) return;
-  const matches = filterVoters(voters, document.querySelector('#search')?.value);
+  const matches = filterVoters(voters, document.querySelector('#search')?.value, document.querySelector('#town')?.value);
   target.innerHTML = matches.length ? matches.map(item => `<article class="voter-card"><div class="avatar">${esc(item.first_name.slice(0, 1))}${esc(item.last_name.slice(0, 1))}</div><div class="voter-info"><h3>${esc(item.first_name)} ${esc(item.last_name)}</h3><p>${esc(item.external_id)} · ${esc(item.town)}${item.ward ? ` · Ward ${esc(item.ward)}` : ''}</p><small>${esc(item.polling_place || 'Training station')}</small></div><div class="voter-action">${item.voted_at ? `<span class="marked">✓ Practice marked</span><small>${esc(new Date(item.voted_at).toLocaleString())}</small>` : `<span class="ready">Ready</span><button data-checkin="${esc(item.id)}">Mark practice check-in</button>`}</div></article>`).join('') : '<p class="empty">No matching practice voters. Try another name or demo ID.</p>';
 }
 async function loadVolunteers() {
@@ -204,10 +229,10 @@ app.addEventListener('click', async event => {
       status(`${volunteer.email} was reassigned to ${targetName}.`); return;
     }
     if (button.id === 'import') {
-      if (role() !== 'admin' || !importRows.length) throw Error('Admin access required and a CSV must be reviewed');
+      if (role() !== 'admin' || !importRows.length || importCampaignId !== campaignId) throw Error('Review a CSV for this campaign before importing');
       button.disabled = true;
       const result = check(await client.rpc('import_voters', { p_campaign_id: campaignId, p_rows: importRows, p_replace: document.querySelector('#replace').checked }));
-      importRows = []; document.querySelector('#csv').value = ''; document.querySelector('#preview').textContent = '';
+      importRows = []; importCampaignId = null; document.querySelector('#csv').value = ''; document.querySelector('#preview').textContent = '';
       await loadVoters(); await loadAudit(); status(`${result.added} added, ${result.updated} updated.`); return;
     }
     if (button.id === 'export') {
@@ -223,18 +248,23 @@ app.addEventListener('click', async event => {
 app.addEventListener('change', async event => {
   try {
     if (event.target.id === 'campaign') {
-      campaignId = event.target.value; ++loadVersion;
-      app.innerHTML = dashboardHtml(); addCampaignTool(); await loadVoters();
+      campaignId = event.target.value; ++loadVersion; importRows = []; importCampaignId = null;
+      app.innerHTML = dashboardHtml(); addCampaignTool(); addLookupAndImportTools(); await loadVoters();
       if (role() === 'admin') await loadAdminPanels();
+    } else if (event.target.id === 'town') {
+      renderVoters();
     } else if (event.target.id === 'csv') {
       const file = event.target.files[0]; if (!file) return;
       if (file.size > 1_200_000) throw Error('File is too large');
       importRows = normalizeVoterCsv(await file.text());
-      document.querySelector('#preview').textContent = `${importRows.length} records parsed. First: ${importRows[0].firstName} ${importRows[0].lastName}. Review the file before importing.`;
+      importCampaignId = campaignId;
+      renderImportPreview();
       document.querySelector('#import').disabled = false;
+    } else if (event.target.id === 'replace') {
+      renderImportPreview();
     }
   } catch (error) {
-    importRows = []; const importButton = document.querySelector('#import'); if (importButton) importButton.disabled = true;
+    importRows = []; importCampaignId = null; const importButton = document.querySelector('#import'); if (importButton) importButton.disabled = true;
     status(await errorMessage(error), true);
   }
 });
