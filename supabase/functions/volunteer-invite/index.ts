@@ -40,16 +40,26 @@ Deno.serve(async request => {
 
   if (email === identity.user.email?.toLowerCase()) return reply(400, { error: 'Use a different email for the volunteer' });
 
+  const { data: people, error: peopleError } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });
+  if (peopleError) return reply(500, { error: 'Could not check volunteer account' });
+  const existingUser = people.users.find(user => user.email?.toLowerCase() === email);
+  if (existingUser) {
+    const { data: existing } = await admin.from('memberships').select('role,active')
+      .eq('user_id', existingUser.id).eq('campaign_id', campaignId).maybeSingle();
+    if (!existing?.active || existing.role !== 'volunteer') return reply(409, { error: 'This account is not an active volunteer in this campaign' });
+    const { data: link, error: linkError } = await admin.auth.admin.generateLink({
+      type: 'magiclink', email, options: { redirectTo },
+    });
+    if (linkError || !link?.properties?.action_link) return reply(400, { error: linkError?.message || 'Could not create one-time link' });
+    return reply(200, { actionLink: link.properties.action_link, email });
+  }
+
   const { data: link, error: linkError } = await admin.auth.admin.generateLink({
     type: 'invite', email, options: { redirectTo },
   });
   if (linkError || !link?.properties?.action_link || !link.user?.id) {
     return reply(400, { error: linkError?.message || 'Could not create an invitation' });
   }
-
-  const { data: existing } = await admin.from('memberships').select('role')
-    .eq('user_id', link.user.id).eq('campaign_id', campaignId).maybeSingle();
-  if (existing) return reply(409, { error: 'This person already has campaign access. Ask them to request a one-time sign-in link.' });
   const { error: assignError } = await admin.from('memberships').insert({
     user_id: link.user.id, campaign_id: campaignId, role: 'volunteer', active: true,
   });
