@@ -4,6 +4,7 @@ const campaignB = '22222222-2222-4222-8222-222222222222';
 const adminId = '33333333-3333-4333-8333-333333333333';
 const volunteerId = '44444444-4444-4444-8444-444444444444';
 const volunteerView = new URLSearchParams(location.search).get('role') === 'volunteer';
+const mockParams = new URLSearchParams(location.search);
 const state = {
   user: volunteerView ? { id: volunteerId, email: 'volunteer@example.invalid' } : { id: adminId, email: 'admin@example.invalid' },
   campaigns: [{ id: campaignA, name: 'Fictional Campaign A' }, { id: campaignB, name: 'Fictional Campaign B' }],
@@ -38,6 +39,8 @@ window.supabase = { createClient: () => ({
   from: query,
   rpc: async (name, args) => {
     if (name === 'mark_voted') {
+      if (mockParams.has('slow-mark')) await new Promise(resolve => setTimeout(resolve, 700));
+      if (mockParams.has('fail-mark')) return { data: null, error: { message: 'Practice save unavailable' } };
       state.marks++;
       const voter = state.voters.find(item => item.id === args.p_voter_id);
       if (voter.voted_at) return { data: null, error: { message: 'Already marked or unavailable' } };

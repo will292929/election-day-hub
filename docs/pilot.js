@@ -42,6 +42,9 @@ function addLookupAndImportTools() {
     '<label>Town<select id="town"><option value="all">All towns</option></select></label>');
   const preview = document.querySelector('#preview');
   if (preview) preview.outerHTML = '<div id="preview" class="scroll" aria-live="polite"></div>';
+  const markButton = document.querySelector('#confirm-mark');
+  if (markButton) markButton.type = 'button';
+  document.querySelector('#confirm-name')?.insertAdjacentHTML('afterend', '<p id="confirm-error" class="error" role="alert" hidden></p>');
 }
 function updateTownOptions() {
   const select = document.querySelector('#town');
@@ -198,22 +201,31 @@ app.addEventListener('click', async event => {
       if (!voter || voter.voted_at || marking) return;
       pendingId = voter.id;
       document.querySelector('#confirm-name').textContent = `${voter.first_name} ${voter.last_name} · ${voter.external_id}`;
+      const errorTarget = document.querySelector('#confirm-error');
+      errorTarget.textContent = ''; errorTarget.hidden = true;
       document.querySelector('#confirm').showModal(); return;
     }
     if (button.id === 'confirm-mark') {
       if (marking || !pendingId) return;
       marking = true; button.disabled = true;
-      const id = pendingId; pendingId = null;
+      const cancelButton = document.querySelector('#confirm button[value="cancel"]');
+      if (cancelButton) cancelButton.disabled = true;
+      const id = pendingId;
       try {
         const timestamp = check(await client.rpc('mark_voted', { p_voter_id: id }));
+        pendingId = null;
+        document.querySelector('#confirm').close();
         ++loadVersion; voters = applyMark(voters, id, timestamp); updateVoterDisplay();
         status('Practice mark saved. This is not an official election check-in.');
         try { await loadVoters(); if (role() === 'admin') await loadAudit(); }
         catch { status('Practice mark saved, but the latest list could not refresh. Use Refresh list to retry.', true); }
       } catch (error) {
-        status(await errorMessage(error), true);
+        const message = await errorMessage(error);
+        status(message, true);
+        const errorTarget = document.querySelector('#confirm-error');
+        if (errorTarget) { errorTarget.textContent = `Could not save: ${message}`; errorTarget.hidden = false; }
         await loadVoters().catch(() => {});
-      } finally { marking = false; }
+      } finally { marking = false; button.disabled = false; if (cancelButton) cancelButton.disabled = false; }
       return;
     }
     if (button.dataset.reassign) {
