@@ -1,0 +1,25 @@
+external_id,first_name,last_name,town,ward,polling_place,address,phone,family_id,consent
+DEMO-001,Ada,Sample,Sampletown,1,Training Station A,,,,true
+DEMO-002,Ben,Practice,Sampletown,1,Training Station A,,,,true
+DEMO-003,Cora,Example,Sampletown,1,Training Station A,,,,true
+DEMO-004,Diego,Placeholder,Sampletown,1,Training Station A,,,,true
+DEMO-005,Elena,Sample,Sampletown,1,Training Station A,,,,true
+DEMO-006,Finn,Practice,Sampletown,1,Training Station A,,,,true
+DEMO-007,Grace,Example,Sampletown,1,Training Station A,,,,true
+DEMO-008,Hugo,Placeholder,Sampletown,1,Training Station A,,,,true
+DEMO-009,Iris,Sample,Sampletown,2,Training Station B,,,,true
+DEMO-010,Jamal,Practice,Sampletown,2,Training Station B,,,,true
+DEMO-011,Kira,Example,Sampletown,2,Training Station B,,,,true
+DEMO-012,Leo,Placeholder,Sampletown,2,Training Station B,,,,true
+DEMO-013,Maya,Sample,Sampletown,2,Training Station B,,,,true
+DEMO-014,Noah,Practice,Sampletown,2,Training Station B,,,,true
+DEMO-015,Olivia,Example,Sampletown,2,Training Station B,,,,true
+DEMO-016,Priya,Placeholder,Sampletown,2,Training Station B,,,,true
+DEMO-017,Quinn,Sample,Sampletown,3,Training Station C,,,,true
+DEMO-018,Ravi,Practice,Sampletown,3,Training Station C,,,,true
+DEMO-019,Sofia,Example,Sampletown,3,Training Station C,,,,true
+DEMO-020,Theo,Placeholder,Sampletown,3,Training Station C,,,,true
+DEMO-021,Uma,Sample,Sampletown,3,Training Station C,,,,true
+DEMO-022,Victor,Practice,Sampletown,3,Training Station C,,,,true
+DEMO-023,Wren,Example,Sampletown,3,Training Station C,,,,true
+DEMO-024,Zoe,Placeholder,Sampletown,3,Training Station C,,,,true

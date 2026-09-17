@@ -19,7 +19,11 @@ This is the preferred **free pilot** architecture. `docs/pilot.html` is a separa
 6. Configure Auth redirect/site URL for the GitHub Pages origin. Publish the files, then open `/pilot.html` and verify sign-in.
 7. Test with fictional records: unauthenticated users see none; volunteers see only their campaign's basic records; admin import/export works only in the assigned campaign; a different campaign's records remain inaccessible; audit events are created. Only then consider replacing the root demo page.
 
-The browser uses the official Supabase JavaScript client from a CDN. Pin and review the exact client version before production use. Account creation and role assignment are intentionally handled in the Supabase Dashboard during this pilot; there is no public signup or browser-held administrative secret.
+The browser uses the official Supabase JavaScript client from a CDN. Pin and review the exact client version before production use. There is no public signup or browser-held administrative secret. The `volunteer-invite` Edge Function creates a single-use invitation for a new volunteer only after validating the signed-in administrator's active membership; it grants volunteer access only. Deploy it with JWT verification enabled. Existing members can request one-time email sign-in links on the pilot page.
+
+## Training setup
+
+The live fictional pilot campaign has 24 practice voters from `docs/training-voters.csv`. The visible `DEMO-` IDs, Sampletown, and Training Station names make them unmistakably fictional. Admins can download the CSV, but should not import it a second time unless intentionally updating matching demo IDs. To invite a new volunteer, sign in as admin, enter their email, create the one-time link, and send the copied URL privately. The link is a bearer credential; generate it shortly before training and do not post it publicly. Each volunteer can later use the emailed one-time sign-in form. Supabase Auth email delivery limits and link expiry depend on project settings, so test with the actual recipients before training.
 
 ## Security boundary
 
