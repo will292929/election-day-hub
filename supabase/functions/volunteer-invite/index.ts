@@ -40,13 +40,25 @@ Deno.serve(async request => {
 
   if (email === identity.user.email?.toLowerCase()) return reply(400, { error: 'Use a different email for the volunteer' });
 
-  const { data: people, error: peopleError } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });
-  if (peopleError) return reply(500, { error: 'Could not check volunteer account' });
-  const existingUser = people.users.find(user => user.email?.toLowerCase() === email);
-  if (existingUser) {
-    const { data: existing } = await admin.from('memberships').select('role,active')
-      .eq('user_id', existingUser.id).eq('campaign_id', campaignId).maybeSingle();
-    if (!existing?.active || existing.role !== 'volunteer') return reply(409, { error: 'This account is not an active volunteer in this campaign' });
+  let existingUserId: string | null = null;
+  for (let page = 1; page <= 20; page++) {
+    const { data: people, error: peopleError } = await admin.auth.admin.listUsers({ page, perPage: 1000 });
+    if (peopleError) return reply(500, { error: 'Could not check volunteer account' });
+    existingUserId = people.users.find(user => user.email?.toLowerCase() === email)?.id || null;
+    if (existingUserId || people.users.length < 1000) break;
+    if (page === 20) return reply(503, { error: 'Volunteer lookup limit reached. Contact the administrator.' });
+  }
+  if (existingUserId) {
+    const { data: assignments, error: assignmentsError } = await admin.from('memberships')
+      .select('campaign_id,role,active').eq('user_id', existingUserId).eq('active', true);
+    if (assignmentsError) return reply(500, { error: 'Could not check volunteer assignment' });
+    const activeAssignments = assignments || [];
+    const existing = activeAssignments.find(item => item.campaign_id === campaignId);
+    if (!existing?.active || existing.role !== 'volunteer') {
+      return reply(409, { error: activeAssignments.some(item => item.role === 'volunteer')
+        ? 'This volunteer belongs to another campaign. Reassign them first.'
+        : 'This account is not an active volunteer in this campaign' });
+    }
     const { data: link, error: linkError } = await admin.auth.admin.generateLink({
       type: 'magiclink', email, options: { redirectTo },
     });

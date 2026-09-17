@@ -25,6 +25,12 @@ The browser uses the official Supabase JavaScript client from a CDN. Pin and rev
 
 The live fictional pilot campaign has 24 practice voters from `docs/training-voters.csv`. The visible `DEMO-` IDs, Sampletown, and Training Station names make them unmistakably fictional. Admins can download the CSV, but should not import it a second time unless intentionally updating matching demo IDs. To invite a new volunteer or issue a fresh one-time link to an existing volunteer, sign in as admin, enter their email, create the link, and send the copied URL privately. The link is a bearer credential; generate it shortly before training and do not post it publicly. Supabase's default SMTP only delivers to pre-authorized team addresses, so the pilot uses manual link sharing instead of relying on Auth email delivery. Test with actual recipients before training.
 
+## Volunteer assignment and live refresh
+
+Apply `migrations/202609170001_volunteer_assignment.sql`, `migrations/202609170002_admin_campaign_creation.sql`, and `migrations/202609170003_lookup_indexes.sql` after the original pilot migration. The partial unique index prevents two active volunteer assignments for the same account. The admin-only `list_volunteers` and `reassign_volunteer` RPCs list a campaign's volunteers and atomically deactivate the old assignment and activate the new one. A transfer requires the caller to be an active admin in both campaigns, so only destinations the admin also manages are shown in the UI. The original assignment remains inactive for history. Admins can create a new fictional training campaign from the pilot page, then reassign volunteers to it.
+
+The volunteer screen updates a successful practice mark immediately, then re-reads the server. It also refreshes while visible and on window focus, so a second device should show new marks without a manual page reload. Marking is still one-way in this pilot; do not use it as an official election check-in system.
+
 ## Security boundary
 
 The visible sign-in form is not the protection. The SQL migration protects the data with grants, row-level security, private storage for phone/address/consent, and admin-checked database functions. The public GitHub Pages code and publishable key remain viewable by everyone. The `docs/pilot.html` route itself is public, but data requests require an authenticated membership.

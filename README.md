@@ -1,6 +1,8 @@
 # Election Day Hub
 
-A local, dependency-free rebuild of the Election Day Hub prototype. It mirrors the published product's poll-watch, team, campaign-settings, and export workflows while storing demo data in `data/state.json`.
+The [live fictional-data training pilot](https://will292929.github.io/election-day-hub/pilot.html) uses Supabase Auth, campaign memberships, row-level security, and server-checked actions. See `supabase/README.md` for its setup and limits. The public root demo and the local prototype below are simulations; use `/pilot.html` for volunteer training.
+
+The local, dependency-free prototype mirrors poll-watch, team, campaign-settings, and export workflows while storing demo data in `data/state.json`.
 
 ## Run
 
