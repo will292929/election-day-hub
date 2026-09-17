@@ -23,7 +23,7 @@ function login() {
   app.innerHTML = `${trainingBanner()}<section class="card login"><div class="logo">ED</div><p class="eyebrow">VOLUNTEER ACCESS</p><h1>Election Day Hub</h1><p>Open the private one-time link your training administrator sent you. It signs you in without a password.</p><div class="divider">or use your password</div><form id="login"><label>Email address<input name="email" type="email" autocomplete="username" required></label><label>Password<input name="password" type="password" autocomplete="current-password" required></label><button>Sign in with password</button></form><p id="status" role="status"></p></section>`;
 }
 function choosePassword() {
-  app.innerHTML = `${trainingBanner()}<section class="card login"><p class="eyebrow">ONE-TIME INVITATION</p><h1>Welcome to the team</h1><p>Your link signed you in. Set a password of at least 14 characters as a backup way to enter.</p><form id="choose-password"><label>New password<input name="password" type="password" autocomplete="new-password" minlength="14" required></label><label>Confirm password<input name="confirm" type="password" autocomplete="new-password" minlength="14" required></label><button>Open training workspace</button></form><p id="status" role="status"></p></section>`;
+  app.innerHTML = `${trainingBanner()}<section class="card login"><p class="eyebrow">PASSWORD RECOVERY</p><h1>Set a new password</h1><p>Your recovery link signed you in. Set a password of at least 14 characters.</p><form id="choose-password"><label>New password<input name="password" type="password" autocomplete="new-password" minlength="14" required></label><label>Confirm password<input name="confirm" type="password" autocomplete="new-password" minlength="14" required></label><button>Open training workspace</button></form><p id="status" role="status"></p></section>`;
 }
 function noAccess() {
   app.innerHTML = `${trainingBanner()}<section class="card login"><h1>No campaign access</h1><p>Ask your training administrator to assign you to a campaign.</p><button id="logout">Sign out</button></section>`;
@@ -280,7 +280,7 @@ else {
   client = window.supabase.createClient(config.url, config.publishableKey, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } });
   const { data, error } = await client.auth.getSession(); session = data.session;
   if (session) {
-    if (authFlow === 'invite' || authFlow === 'recovery') choosePassword();
+    if (authFlow === 'recovery') choosePassword();
     else { history.replaceState(null, '', location.pathname); try { await dashboard(); } catch (failure) { login(); status(failure.message, true); } }
   } else { login(); if (error || authFlow === 'invite' || authFlow === 'recovery') status('This one-time link is invalid or expired. Ask the administrator for another link.', true); }
   client.auth.onAuthStateChange((event, next) => {
